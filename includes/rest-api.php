@@ -22,7 +22,7 @@ function setup() {
 }
 
 function get_rest_namespace() {
-	return 'wmc/v1';
+	return 'wmc/v2';
 }
 
 function register_endpoints() {
@@ -55,6 +55,7 @@ function register_endpoints() {
  * @return \WP_Error|array Error on failure, orders on success.
  */
 function get_pending_orders( $request ) {
+	// Get and validate the server key.
 	$server_key = esc_attr( $request->get_param( 'server' ) );
 	$servers    = get_option( 'wm_servers', [] );
 	if ( empty( $servers ) ) {
@@ -68,6 +69,7 @@ function get_pending_orders( $request ) {
 	}
 
 	$pending_orders = wp_cache_get( $server_key, 'wmc_commands' );
+
 	if ( false === $pending_orders ) {
 		$pending_orders = get_orders_for_server( $server_key );
 		if ( is_wp_error( $pending_orders ) ) {
@@ -133,7 +135,9 @@ function process_orders( $request ) {
 	}
 
 	foreach ( $orders as $order_id ) {
-		update_post_meta( $order_id, get_meta_key_delivered( $server_key ), true );
+		$order = wc_get_order($order_id);
+		$order->update_meta_data( get_meta_key_delivered( $server_key ), true );
+		$order->save();
 	}
 
 	bust_command_cache( $server_key );

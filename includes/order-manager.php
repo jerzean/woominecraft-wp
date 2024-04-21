@@ -12,7 +12,7 @@ function setup() {
 	$n = function( $string ) {
 		return __NAMESPACE__ . '\\' . $string;
 	};
-
+	
 	add_action( 'woocommerce_checkout_update_order_meta', $n( 'save_commands_to_order' ) );
 	add_action( 'woocommerce_before_checkout_billing_form', $n( 'additional_checkout_field' ) );
 	add_action( 'woocommerce_thankyou', $n( 'thanks' ) );
@@ -47,7 +47,6 @@ function require_fields() {
  * @param int $order_id A WooCommerce order ID.
  */
 function save_commands_to_order( $order_id ) {
-
 	$order_data = new \WC_Order( $order_id );
 	$items      = $order_data->get_items();
 	$tmp_array  = array();
@@ -57,7 +56,8 @@ function save_commands_to_order( $order_id ) {
 	}
 
 	$player_name = sanitize_text_field( $_POST['player_id'] ); // @codingStandardsIgnoreLine No nonce needed.
-	update_post_meta( $order_id, 'player_id', $player_name );
+	$order = wc_get_order( $order_id );
+	$order->update_meta_data( 'player_id', $player_name );
 
 	foreach ( $items as $item ) {
 
@@ -67,7 +67,10 @@ function save_commands_to_order( $order_id ) {
 			continue;
 		}
 
-		$item_commands = get_post_meta( $product_id, 'wmc_commands', true );
+		$product = wc_get_product( $product_id );
+		$item_commands = $product->get_meta( 'wmc_commands', true );
+		$product->save();
+
 		if ( empty( $item_commands ) ) {
 			continue;
 		}
@@ -92,9 +95,11 @@ function save_commands_to_order( $order_id ) {
 
 	if ( ! empty( $tmp_array ) ) {
 		foreach ( $tmp_array as $server_key => $commands ) {
-			update_post_meta( $order_id, '_wmc_commands_' . $server_key, $commands );
+			$order->update_meta_data( '_wmc_commands_' . $server_key, $commands );
 		}
 	}
+
+	$order->save();
 }
 
 /**
@@ -137,7 +142,9 @@ function additional_checkout_field( $cart ) {
  * @param int $id The order ID.
  */
 function thanks( $id ) {
-	$player_name = get_post_meta( $id, 'player_id', true );
+	$order = wc_get_order($id);
+	$player_name = $order->get_meta( 'player_id', true );
+	$order->save();
 	if ( ! empty( $player_name ) ) {
 		?>
 		<div class="woo_minecraft"><h4><?php esc_html_e( 'Minecraft Details', 'woominecraft' ); ?></h4>
@@ -155,7 +162,9 @@ function thanks( $id ) {
  * @return bool
  */
 function reset_order( $order_id, $server_key ) {
-	delete_post_meta( $order_id, '_wmc_delivered_' . $server_key );
+	$order = wc_get_order( $order_id );
+	$order->delete_meta_data( '_wmc_commands_' . $server_key );
+	$order->save();
 	bust_command_cache( $server_key );
 	return true;
 }
@@ -171,7 +180,10 @@ function get_player_id_for_order( $order_id ) {
 		$order_id = intval( $order_id->ID );
 	}
 
-	return (string) get_post_meta( (int) $order_id, 'player_id', true );
+	$order = wc_get_order((int) $order_id);
+	$return = $order->get_meta( 'player_id', true );
+	$order->save();
+	return (string) $return;
 }
 
 /**
@@ -188,7 +200,10 @@ function generate_order_json( $order_post, $key ) {
 		$order_post = intval( $order_post->ID );
 	}
 
-	return get_post_meta( (int) $order_post, '_wmc_commands_' . $key, true );
+	$order = wc_get_order((int) $order_post);
+	$return = $order->get_meta( '_wmc_commands_' . $key, true );
+	$order->save();
+	return $return;
 }
 
 /**
@@ -208,6 +223,7 @@ function get_orders_for_server( $server_key ) {
 		return new \WP_Error( 'invalid_args', 'Request could not be completed due to malformed arguments server-side.', [ 'status' => 500 ] );
 	}
 
+	// return $args;
 	// Get the orders, and setup a variable.
 	$orders = wc_get_orders( $args );
 	$output = [];
@@ -215,14 +231,17 @@ function get_orders_for_server( $server_key ) {
 	if ( empty( $orders ) ) {
 		return $output;
 	}
+	
+	
 
 	foreach ( $orders as $wc_order ) {
 		if ( ! $wc_order->get_id() ) {
 			continue;
-		}
+		};
 
 		$player_id  = get_player_id_for_order( $wc_order->get_id() );
 		$order_data = generate_order_json( $wc_order->get_id(), $server_key );
+
 		if ( empty( $order_data ) ) {
 			continue;
 		}

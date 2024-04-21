@@ -1,19 +1,25 @@
 <?php
 /*
-Plugin Name: WooMinecraft
+Plugin Name: WooMinecraft2.0
 Plugin URI: http://woominecraft.com
 Description: A WooCommerce plugin which allows donations and commands to be sent to your Minecraft server.
 Author: Jerry Wood
-Version: 1.4.5
+Version: 1.4.6
 License: GPLv2
-Text Domain: woominecraft
+Text Domain: woominecraft2.0
 Domain Path: /languages
 Author URI: http://plugish.com
-WC requires at least: 3.0
-WC tested up to: 6.0.0
+WC requires at least: 6.5.2
+WC tested up to: 6.5.2
 */
 
-namespace WooMinecraft;
+namespace WooMinecraft2.0;
+
+add_action('before_woocommerce_init', function() {
+    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+    }
+});
 
 define( 'WMC_INCLUDES', plugin_dir_path( __FILE__ ) . 'includes/' );
 define( 'WMC_URL', plugin_dir_url( __FILE__ ) );
@@ -37,6 +43,8 @@ REST\setup();
 
 require_once WMC_INCLUDES . 'woocommerce-admin.php';
 WooCommerce\setup();
+
+use Automattic\WooCommerce\Utilities\OrderUtil;
 
 // Fire an action after all is done.
 do_action( 'woominecraft_setup' );

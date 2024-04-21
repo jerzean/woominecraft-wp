@@ -1,9 +1,9 @@
-=== WooMinecraft-WP ===
+=== WooMinecraft-WP2 ===
 Contributors: jaycodez
 Tags: minecraft, woocommerce, donations
-Requires at least: 4.4.2
-Tested up to: 5.8.2
-Stable tag: 1.4.5
+Requires at least: 6.5.2
+Tested up to: 6.5.2
+Stable tag: 1.4.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -54,6 +54,10 @@ Yea sure, we've all use to BuyCraft, but well, it doesn't have the flexibility o
 3. Adding servers.
 
 == Changelog ==
+
+= 1.4.6 =
+* update to latest version
+* added woocomerce HP DB support
 
 = 1.4.5 =
 * Small readme fixes in automation processes.

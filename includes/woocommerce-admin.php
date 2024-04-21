@@ -104,7 +104,9 @@ function add_users_and_deliveries( $column, $post_id ) {
 			printf( '<span class="wmc-orders-delivered">%s</span>', get_delivered_col_output( $post_id ) );
 			break;
 		case 'wmc-player':
-			$player_id = get_post_meta( $post_id, 'player_id', true );
+			$order = wc_get_order($post_id);
+			$player_id = $order->get_meta( 'player_id', true );
+			$order->save();
 			$href      = add_query_arg( 'wmc-player-name', $player_id );
 			printf( '<a class="wmc-player-name" href="%2$s">%1$s</a>', $player_id ? $player_id : ' - ', $href );
 			break;
@@ -287,7 +289,9 @@ function add_variation_field( $loop, $variation_data, $post ) {
 		return;
 	}
 
-	$commands    = get_post_meta( $post->ID, 'wmc_commands', true );
+	$order = wc_get_order($post->ID);
+	$commands    = $order->get_meta( 'wmc_commands', true );
+	$order->save();
 	$command_key = 'variable';
 	$post_id     = $post->ID;
 	include 'views/commands.php';
@@ -320,18 +324,20 @@ function update_product_commands( $old_key ) {
 		),
 	);
 
-	$posts = get_posts( $commands_query );
+	$posts = wc_get_order( $commands_query );
 
 	if ( empty( $posts ) ) {
 		return;
 	}
 
 	foreach ( $posts as $product ) {
-		$meta                  = get_post_meta( $product->ID, 'minecraft_woo', true );
+		$order = wc_get_order( $product->ID );
+		$meta                  = $order->get_meta( 'minecraft_woo', true );
 		$new_array             = array();
 		$new_array[ $old_key ] = $meta;
-		update_post_meta( $product->ID, 'wmc_commands', $new_array );
-		delete_post_meta( $product->ID, 'minecraft_woo' );
+		$order->update_meta_data( 'wmc_commands', $new_array );
+		$order->delete_meta_data( 'minecraft_woo' );
+		$order->save();
 	}
 
 }
@@ -353,12 +359,14 @@ function update_order_commands( $old_key ) {
 		),
 	);
 
-	$posts = get_posts( $order_commands_query );
+	$posts = wc_get_order( $order_commands_query );
 
 	foreach ( $posts as $post_obj ) {
-		$meta = get_post_meta( $post_obj->ID, 'wmc_commands' );
-		update_post_meta( $post_obj->ID, '_wmc_commands_' . $old_key, $meta );
-		delete_post_meta( $post_obj->ID, 'wmc_commands' );
+		$order = wc_get_order( $post_obj->ID );
+		$meta = $order->get_meta( 'wmc_commands', true );
+		$order->update_meta_data( '_wmc_commands_' . $old_key, $meta );
+		$order->delete_meta_data( 'wmc_commands' );
+		$order->save();
 	}
 }
 
@@ -420,7 +428,9 @@ function _save_product_commands( $post_id = 0, $command_set = array() ) {
 	}
 
 	if ( ! empty( $meta ) ) {
-		update_post_meta( $post_id, 'wmc_commands', $meta );
+		$order = wc_get_order($post_id);
+		$order->update_meta_data( 'wmc_commands', $meta );
+		$order->save();
 	}
 }
 
@@ -448,8 +458,9 @@ function _save_commands( $post_id, $type ) {
  * @param \WC_Order $order The Order object.
  */
 function do_resend_donations_field( $order ) {
-
-	$player_id   = get_post_meta( $order->get_id(), 'player_id', true );
+	$order = wc_get_order($order->get_id());
+	$player_id   = $order->get_meta( 'player_id', true );
+	$order->save();
 	$servers     = get_option( WM_SERVERS );
 	$post_custom = get_post_custom( $order->get_id() );
 
@@ -518,7 +529,9 @@ function admin_scripts( $hook = '' ) {
 		global $post;
 		if ( isset( $post->ID ) ) {
 			$script_data['order_id']  = $post->ID;
-			$script_data['player_id'] = get_post_meta( $post->ID, 'player_id', true );
+			$order = wc_get_order($post->ID);
+			$script_data['player_id'] = $order->get_meta( 'player_id', true );
+			$order->save();
 		}
 	}
 
@@ -538,7 +551,9 @@ function add_group_field() {
 		return;
 	}
 
-	$commands    = get_post_meta( $post->ID, 'wmc_commands', true );
+	$order = wc_get_order($post->ID);
+	$commands    = $order->get_meta( 'wmc_commands', true );
+	$order->save();
 	$command_key = 'simple';
 	$post_id     = $post->ID;
 	include_once 'views/commands.php';
