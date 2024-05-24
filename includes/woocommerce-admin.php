@@ -428,9 +428,13 @@ function _save_product_commands( $post_id = 0, $command_set = array() ) {
 	}
 
 	if ( ! empty( $meta ) ) {
-		$order = wc_get_order($post_id);
+		if ( ! empty($order) ) {
+		$order = wc_get_product($post_id);
 		$order->update_meta_data( 'wmc_commands', $meta );
 		$order->save();
+		} else {
+			update_post_meta( $post_id, 'wmc_commands', $meta );
+		}
 	}
 }
 
@@ -530,8 +534,12 @@ function admin_scripts( $hook = '' ) {
 		if ( isset( $post->ID ) ) {
 			$script_data['order_id']  = $post->ID;
 			$order = wc_get_order($post->ID);
+			if ( ! empty($order) ) {	
 			$script_data['player_id'] = $order->get_meta( 'player_id', true );
 			$order->save();
+			} else {
+				$script_data['player_id'] = get_post_meta( $post->ID, 'player_id', true );
+			}
 		}
 	}
 
@@ -545,16 +553,24 @@ function admin_scripts( $hook = '' ) {
  * Adds the WooMinecraft commands field to the general product meta-box.
  */
 function add_group_field() {
-	global $post;
+    global $post;
 
-	if ( ! isset( $post->ID ) || ! $post instanceof \WP_Post ) {
-		return;
+    if ( ! isset( $post->ID ) || ! $post instanceof \WP_Post ) {
+        return;
+    }
+
+    $product = wc_get_product($post->ID);
+
+    if ( ! $product ) {
+        echo "Error: Unable to retrieve HPOS product object.";
+    } else {
+		$commands = $product->get_meta( 'wmc_commands', true );
+		if ( ! is_array( $commands ) ) {
+			$commands = array(); // Initialize $commands as an empty array if it's not an array already
+		}
+		$product->save();
+		$command_key = 'simple';
+		$post_id = $post->ID;
+		include_once 'views/commands.php';
 	}
-
-	$order = wc_get_order($post->ID);
-	$commands    = $order->get_meta( 'wmc_commands', true );
-	$order->save();
-	$command_key = 'simple';
-	$post_id     = $post->ID;
-	include_once 'views/commands.php';
 }

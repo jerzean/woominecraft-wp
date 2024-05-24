@@ -1,19 +1,19 @@
 <?php
 /*
-Plugin Name: WooMinecraft2.0
+Plugin Name: WooMinecraft
 Plugin URI: http://woominecraft.com
 Description: A WooCommerce plugin which allows donations and commands to be sent to your Minecraft server.
 Author: Jerry Wood
 Version: 1.4.6
 License: GPLv2
-Text Domain: woominecraft2.0
+Text Domain: woominecraft
 Domain Path: /languages
 Author URI: http://plugish.com
 WC requires at least: 6.5.2
 WC tested up to: 6.5.2
 */
 
-namespace WooMinecraft2.0;
+namespace WooMinecraft;
 
 add_action('before_woocommerce_init', function() {
     if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {

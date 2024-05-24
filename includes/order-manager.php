@@ -34,7 +34,7 @@ function require_fields() {
 		return;
 	}
 
-	$player_id = isset( $_POST['player_id'] ) ? sanitize_text_field( $_POST['player_id'] ) : false; // @codingStandardsIgnoreLine No nonce needed.
+	$player_id = isset( $_POST['player_id'] ) ? sanitize_text_field( $_POST['player_id'] ) : false; 
 	if ( ! $player_id ) {
 		wc_add_notice( __( 'You MUST provide a Minecraft username.', 'woominecraft' ), 'error' );
 		return;
@@ -51,7 +51,7 @@ function save_commands_to_order( $order_id ) {
 	$items      = $order_data->get_items();
 	$tmp_array  = array();
 
-	if ( ! isset( $_POST['player_id'] ) || empty( $_POST['player_id'] ) ) { // @codingStandardsIgnoreLine No nonce needed.
+	if ( ! isset( $_POST['player_id'] ) || empty( $_POST['player_id'] ) ) { 
 		return;
 	}
 
